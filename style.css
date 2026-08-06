@@ -1,0 +1,395 @@
+:root {
+    --text-color: #1C1B20;
+    --bg-color: #FAA67C;
+    --accent-color: #E94E64;
+    --card-bg: rgba(255, 255, 255, 0.2);
+    --border-color: rgba(28, 27, 32, 0.1);
+}
+
+body.dark-theme {
+    --text-color: #fdf5f2; /* Light whitish shade */
+    --bg-color: #1C1B20;
+    --accent-color: #E94E64;
+    --card-bg: rgba(255, 255, 255, 0.05);
+    --border-color: rgba(253, 245, 242, 0.1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    cursor: none; /* Hide default cursor for custom cursor */
+}
+
+body {
+    font-family: 'Inria Serif', serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    overflow-x: hidden;
+    transition: background-color 0.5s ease, color 0.5s ease;
+}
+
+h1, h2, h3, .nav-brand, .highlight {
+    font-family: 'Playfair Display', serif;
+}
+
+.italic {
+    font-style: italic;
+}
+
+/* Type-on-view typing cursor */
+.type-on-view {
+    position: relative;
+}
+
+.type-on-view.typing::after {
+    content: "|";
+    display: inline-block;
+    margin-left: 2px;
+    color: currentColor;
+    animation: typing-blink 0.9s step-end infinite;
+}
+
+@keyframes typing-blink {
+    50% { opacity: 0; }
+}
+
+/* Custom Cursor */
+.custom-cursor {
+    width: 20px;
+    height: 20px;
+    border: 2px solid var(--accent-color);
+    border-radius: 50%;
+    position: fixed;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    transition: width 0.2s, height 0.2s, background-color 0.2s;
+}
+
+.custom-cursor.hovering {
+    width: 40px;
+    height: 40px;
+    background-color: rgba(233, 78, 100, 0.2);
+}
+
+/* Particles Background */
+#particles-js {
+    position: fixed;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    z-index: -1;
+}
+
+/* Hero & Profile Animation */
+.hero-container {
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
+
+#profile-pic {
+    width: 250px;
+    height: 250px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    border: 4px solid var(--accent-color);
+    transition: transform 0.3s;
+}
+
+#profile-pic.in-nav {
+    box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+}
+
+/* Navbar */
+nav {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    /* background: rgba(250, 166, 124, 0.9); */
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+    z-index: 1000;
+    padding: 1rem 2rem;
+    transform: translateY(-100%);
+    transition: transform 0.5s ease, background 0.5s ease;
+    border-bottom: 1px solid var(--border-color);
+}
+
+nav.visible {
+    transform: translateY(0);
+}
+
+.nav-content {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.nav-left {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.avatar-target {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    opacity: 0;
+    pointer-events: none;
+    flex: 0 0 auto;
+}
+
+.nav-brand {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: var(--accent-color);
+}
+
+/* (avatar is animated in via #profile-pic) */
+
+.nav-links {
+    display: flex;
+    gap: 2rem;
+    list-style: none;
+}
+
+.nav-links a {
+    color: var(--text-color);
+    text-decoration: none;
+    font-family: 'Playfair Display', serif;
+    font-size: 1.1rem;
+    position: relative;
+    transition: color 0.3s;
+}
+.nav-links a:hover {
+    color: var(--accent-color);
+}
+
+/* Main Content */
+main {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem;
+    position: relative;
+    z-index: 10;
+}
+
+.section {
+    min-height: 80vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 5rem 0;
+}
+
+.content h1 {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    min-height: 5rem;
+}
+
+.content h2 {
+    font-size: 2.5rem;
+    margin-bottom: 2rem;
+    color: var(--accent-color);
+}
+
+.subtitle {
+    font-size: 1.5rem;
+    margin-bottom: 3rem;
+    opacity: 0.8;
+}
+
+.about-card, .card {
+    background: var(--card-bg);
+    padding: 2rem;
+    border-radius: 15px;
+    -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: blur(5px);
+    border: 1px solid var(--border-color);
+    margin-bottom: 2rem;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+}
+
+/* Fully clickable project cards */
+a.card-link {
+    display: block;
+    color: inherit;
+}
+
+a.card-link h3 {
+    color: var(--accent-color);
+}
+
+a.card-link:focus-visible {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 4px;
+}
+
+/* Spotify interest card hover background */
+.card.spotify {
+    position: relative;
+    overflow: hidden;
+}
+
+.card.spotify::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    transition: opacity 0.35s ease;
+    background:
+        radial-gradient(600px circle at 20% 20%, rgba(30, 215, 96, 0.18), transparent 55%),
+        radial-gradient(600px circle at 70% 60%, rgba(233, 78, 100, 0.16), transparent 55%),
+        linear-gradient(135deg, rgba(28, 27, 32, 0.08), rgba(250, 166, 124, 0.10));
+}
+
+body.dark-theme .card.spotify::before {
+    background:
+        radial-gradient(600px circle at 20% 20%, rgba(30, 215, 96, 0.14), transparent 55%),
+        radial-gradient(600px circle at 70% 60%, rgba(233, 78, 100, 0.14), transparent 55%),
+        linear-gradient(135deg, rgba(253, 245, 242, 0.06), rgba(233, 78, 100, 0.06));
+}
+
+.card.spotify:hover::before {
+    opacity: 1;
+}
+
+.card.spotify > * {
+    position: relative;
+    z-index: 1;
+}
+
+.playlist-link {
+    display: inline-block;
+    margin-top: 1rem;
+    padding: 0.6rem 1rem;
+    border-radius: 999px;
+    border: 1px solid var(--border-color);
+    background: rgba(255, 255, 255, 0.10);
+    color: var(--text-color);
+    font-family: 'Playfair Display', serif;
+}
+
+.playlist-link:hover {
+    border-color: var(--accent-color);
+}
+
+.quote {
+    font-size: 1.2rem;
+    border-left: 3px solid var(--accent-color);
+    padding-left: 1rem;
+    margin: 2rem 0;
+    opacity: 0.8;
+}
+
+/* Links & Buttons */
+a {
+    color: var(--accent-color);
+    text-decoration: none;
+}
+
+.btn {
+    display: inline-block;
+    padding: 0.8rem 1.5rem;
+    border: 2px solid var(--accent-color);
+    color: var(--text-color);
+    border-radius: 25px;
+    text-decoration: none;
+    font-family: 'Playfair Display', serif;
+    font-weight: bold;
+    transition: all 0.3s;
+    margin-right: 1rem;
+    margin-bottom: 1rem;
+}
+
+.btn:hover {
+    background: var(--accent-color);
+    color: var(--bg-color);
+}
+
+/* Grids */
+.grid, .interests-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 2rem;
+}
+
+.skills-container img, .rig-badges img {
+    max-width: 100%;
+    margin-top: 1rem;
+}
+.rig-badges {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 1rem;
+}
+
+/* Hidden secret text */
+.hidden-secret {
+    margin-top: 5rem;
+    text-align: center;
+    opacity: 0.2;
+    transition: opacity 0.5s;
+}
+.hidden-secret:hover {
+    opacity: 1;
+}
+.subtle-text {
+    font-size: 0.8rem;
+    letter-spacing: 2px;
+}
+
+/* Theme Toggle */
+.theme-toggle {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--text-color);
+    z-index: 1000;
+    -webkit-backdrop-filter: blur(5px);
+    backdrop-filter: blur(5px);
+}
+
+.theme-toggle:focus-visible {
+    outline: 2px solid var(--accent-color);
+    outline-offset: 4px;
+}
+
+.theme-icon {
+    display: none;
+}
+
+body[data-theme-mode="auto"] .icon-auto { display: block; }
+body[data-theme-mode="light"] .icon-light { display: block; }
+body[data-theme-mode="dark"] .icon-dark { display: block; }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .content h1 { font-size: 2.5rem; }
+    #profile-pic { width: 150px; height: 150px; }
+    .nav-links { display: none; }
+}
