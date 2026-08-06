@@ -74,6 +74,33 @@ function sleep(ms) {
 
 const typingStates = new Map();
 
+function resolveTypingSettings(el) {
+    const defaults = {
+        maxDelay: 70,
+        minDelay: 10,
+        accel: 3.5,
+    };
+
+    let current = el;
+    while (current) {
+        const maxDelay = current.dataset?.typeMaxDelay;
+        const minDelay = current.dataset?.typeMinDelay;
+        const accel = current.dataset?.typeAccel;
+
+        if (maxDelay !== undefined || minDelay !== undefined || accel !== undefined) {
+            return {
+                maxDelay: parseFloat(maxDelay ?? defaults.maxDelay),
+                minDelay: parseFloat(minDelay ?? defaults.minDelay),
+                accel: parseFloat(accel ?? defaults.accel),
+            };
+        }
+
+        current = current.parentElement;
+    }
+
+    return defaults;
+}
+
 async function typeNode(src, dest, state, totalChars) {
     if (src.nodeType === Node.TEXT_NODE) {
         const textNode = document.createTextNode('');
@@ -107,10 +134,11 @@ async function typeElementHtml(el) {
     if (el.dataset.typed === '1') return;
 
     const state = typingStates.get(el) ?? { speedMultiplier: 1 };
+    const typingSettings = resolveTypingSettings(el);
     state.typedChars = 0;
-    state.maxDelay = parseFloat(el.dataset.typeMaxDelay || '70');
-    state.minDelay = parseFloat(el.dataset.typeMinDelay || '10');
-    state.accel = parseFloat(el.dataset.typeAccel || '3.5');
+    state.maxDelay = typingSettings.maxDelay;
+    state.minDelay = typingSettings.minDelay;
+    state.accel = typingSettings.accel;
     typingStates.set(el, state);
 
     el.dataset.typed = '1';
