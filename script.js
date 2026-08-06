@@ -68,59 +68,60 @@ function autoMarkTypeOnView() {
     });
 }
 
-function splitHtmlTokens(html) {
-    // Splits into [tagOrText...] keeping tags as tokens.
-    // Example: "Hi<br><span>ok</span>" -> ["Hi", "<br>", "<span>", "ok", "</span>"]
-    return html.split(/(<[^>]+>)/g).filter(Boolean);
-}
-
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 const typingStates = new Map();
 
+async function typeNode(src, dest, state, totalChars) {
+    if (src.nodeType === Node.TEXT_NODE) {
+        const textNode = document.createTextNode('');
+        dest.appendChild(textNode);
+
+        for (const ch of src.nodeValue || '') {
+            textNode.appendData(ch);
+
+            state.typedChars += 1;
+            const progress = totalChars > 0 ? state.typedChars / totalChars : 1;
+            const baseDelay = state.minDelay + (state.maxDelay - state.minDelay) * Math.exp(-state.accel * progress);
+            const delay = Math.max(0, baseDelay / Math.max(1, state.speedMultiplier));
+            await sleep(delay);
+        }
+
+        return;
+    }
+
+    if (src.nodeType === Node.ELEMENT_NODE) {
+        const copy = src.cloneNode(false);
+        dest.appendChild(copy);
+
+        for (const child of src.childNodes) {
+            await typeNode(child, copy, state, totalChars);
+        }
+    }
+}
+
 async function typeElementHtml(el) {
     if (prefersReducedMotion) return;
     if (el.dataset.typed === '1') return;
 
-    const originalHtml = el.dataset.typeHtml ?? el.innerHTML;
-    const tokens = splitHtmlTokens(originalHtml);
     const state = typingStates.get(el) ?? { speedMultiplier: 1 };
+    state.typedChars = 0;
+    state.maxDelay = parseFloat(el.dataset.typeMaxDelay || '70');
+    state.minDelay = parseFloat(el.dataset.typeMinDelay || '10');
+    state.accel = parseFloat(el.dataset.typeAccel || '3.5');
     typingStates.set(el, state);
 
     el.dataset.typed = '1';
     el.classList.add('typing');
+    const clone = el.cloneNode(true);
     el.innerHTML = '';
 
-    // Flatten for progress calculation based on text length only.
-    const fullText = el.textContent; // empty currently; compute from tokens instead
-    const totalChars = tokens
-        .filter(t => !t.startsWith('<'))
-        .reduce((sum, t) => sum + t.length, 0);
+    const totalChars = clone.textContent ? clone.textContent.length : 0;
 
-    let typedChars = 0;
-    const maxDelay = parseFloat(el.dataset.typeMaxDelay || '70');
-    const minDelay = parseFloat(el.dataset.typeMinDelay || '10');
-    const accel = parseFloat(el.dataset.typeAccel || '3.5');
-
-    for (const token of tokens) {
-        if (token.startsWith('<')) {
-            el.insertAdjacentHTML('beforeend', token);
-            continue;
-        }
-
-        for (const ch of token) {
-            // Use text node appends for safety
-            el.appendChild(document.createTextNode(ch));
-            typedChars += 1;
-
-            const progress = totalChars > 0 ? typedChars / totalChars : 1;
-            // Exponential ramp: delay shrinks as exp(-accel * progress)
-            const baseDelay = minDelay + (maxDelay - minDelay) * Math.exp(-accel * progress);
-            const delay = Math.max(0, baseDelay / Math.max(1, state.speedMultiplier));
-            await sleep(delay);
-        }
+    for (const child of clone.childNodes) {
+        await typeNode(child, el, state, totalChars);
     }
 
     el.classList.remove('typing');
@@ -135,9 +136,7 @@ function initTypeOnView() {
         return;
     }
 
-    // Prepare: capture intended HTML to type.
     els.forEach(el => {
-        if (!el.dataset.typeHtml) el.dataset.typeHtml = el.innerHTML;
         el.dataset.typed = '0';
     });
 
