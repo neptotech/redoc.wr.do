@@ -405,3 +405,28 @@ gsap.utils.toArray('.card').forEach((card, i) => {
         ease: "power2.out"
     });
 });
+
+// ── Intro avatar sequential rotator (a → b → c → d → e → a …) ───────────────
+(function () {
+    const avatar = document.getElementById('intro-avatar');
+    if (!avatar) return;
+
+    const sequence = ['a', 'b', 'c', 'd', 'e'];
+    // derive starting letter from src, default to 'a'
+    const srcLetter = (avatar.src.match(/\/([a-e])\.png$/) || [, 'a'])[1];
+    let idx = sequence.indexOf(srcLetter);
+    if (idx === -1) idx = 0;
+
+    setInterval(() => {
+        avatar.style.transition = 'opacity 0.6s ease';
+        avatar.style.opacity = '0';
+
+        setTimeout(() => {
+            idx = (idx + 1) % sequence.length;
+            avatar.src = `pp/${sequence[idx]}.png`;
+            avatar.onload = () => { avatar.style.opacity = '1'; };
+            if (avatar.complete) avatar.style.opacity = '1';
+        }, 650);
+    }, 8000);
+})();
+
