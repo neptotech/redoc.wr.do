@@ -12,14 +12,19 @@ const NOTION_VERSION = '2022-06-28';
  * property doesn't exist or has an unexpected shape.
  */
 function getProp(properties, name, fallback = null) {
-    const prop = properties?.[name];
+    if (!properties) return fallback;
+    const targetKey = Object.keys(properties).find(
+        (k) => k.toLowerCase() === name.toLowerCase()
+    );
+    if (!targetKey) return fallback;
+    const prop = properties[targetKey];
     if (!prop) return fallback;
 
     switch (prop.type) {
         case 'title':
-            return prop.title?.[0]?.plain_text ?? fallback;
+            return prop.title?.map((t) => t.plain_text).join('') || fallback;
         case 'rich_text':
-            return prop.rich_text?.[0]?.plain_text ?? fallback;
+            return prop.rich_text?.map((t) => t.plain_text).join('') || fallback;
         case 'checkbox':
             return prop.checkbox ?? fallback;
         case 'date':

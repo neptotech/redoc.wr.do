@@ -9,15 +9,21 @@ const NOTION_VERSION = '2022-06-28';
 /* ─── helpers ─────────────────────────────────────────────────────────────── */
 
 function getProp(properties, name, fallback = null) {
-    const prop = properties?.[name];
+    if (!properties) return fallback;
+    const targetKey = Object.keys(properties).find(
+        (k) => k.toLowerCase() === name.toLowerCase()
+    );
+    if (!targetKey) return fallback;
+    const prop = properties[targetKey];
     if (!prop) return fallback;
+
     switch (prop.type) {
-        case 'title':       return prop.title?.[0]?.plain_text ?? fallback;
-        case 'rich_text':   return prop.rich_text?.[0]?.plain_text ?? fallback;
-        case 'checkbox':    return prop.checkbox ?? fallback;
-        case 'date':        return prop.date?.start ?? fallback;
-        case 'multi_select':return prop.multi_select?.map((s) => s.name) ?? fallback;
-        default:            return fallback;
+        case 'title':        return prop.title?.map((t) => t.plain_text).join('') || fallback;
+        case 'rich_text':    return prop.rich_text?.map((t) => t.plain_text).join('') || fallback;
+        case 'checkbox':     return prop.checkbox ?? fallback;
+        case 'date':         return prop.date?.start ?? fallback;
+        case 'multi_select': return prop.multi_select?.map((s) => s.name) ?? fallback;
+        default:             return fallback;
     }
 }
 
@@ -196,20 +202,21 @@ export default async function handler(req, res) {
                 },
                 body: JSON.stringify({
                     filter: {
-                        and: [
-                            { property: 'Published', checkbox: { equals: true } },
-                            { property: 'Slug', rich_text: { equals: slug } },
-                        ],
+                        property: 'Published',
+                        checkbox: { equals: true },
                     },
-                    page_size: 1,
+                    page_size: 100,
                 }),
             }
         );
 
         let queryData = await queryRes.json();
+        let page = (queryData.results ?? []).find((p) => {
+            const pSlug = getProp(p.properties, 'Slug', '');
+            return pSlug.trim() === slug || p.id === slug;
+        });
 
-        // Fallback: If not found by Slug, try fetching page directly by ID (if slug looks like a Notion page ID)
-        let page = queryData.results?.[0];
+        // Fallback: If not found in DB query, try fetching page directly by ID
         if (!page) {
             const pageRes = await fetch(`https://api.notion.com/v1/pages/${slug}`, {
                 headers: {
