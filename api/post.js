@@ -184,8 +184,8 @@ export default async function handler(req, res) {
     }
 
     try {
-        // 1. Query the DB to find the matching page by Slug property
-        const queryRes = await fetch(
+        // 1. Query the DB to find the matching page by Slug property or ID
+        let queryRes = await fetch(
             `https://api.notion.com/v1/databases/${NOTION_DB_ID.trim()}/query`,
             {
                 method: 'POST',
@@ -206,16 +206,30 @@ export default async function handler(req, res) {
             }
         );
 
-        const queryData = await queryRes.json();
-        if (!queryRes.ok) {
-            return res.status(502).json({ error: queryData.message ?? 'Notion API error' });
+        let queryData = await queryRes.json();
+
+        // Fallback: If not found by Slug, try fetching page directly by ID (if slug looks like a Notion page ID)
+        let page = queryData.results?.[0];
+        if (!page) {
+            const pageRes = await fetch(`https://api.notion.com/v1/pages/${slug}`, {
+                headers: {
+                    Authorization: `Bearer ${NOTION_TOKEN}`,
+                    'Notion-Version': NOTION_VERSION,
+                },
+            });
+            if (pageRes.ok) {
+                const fetchedPage = await pageRes.json();
+                const isPublished = getProp(fetchedPage.properties, 'Published', false);
+                if (isPublished) {
+                    page = fetchedPage;
+                }
+            }
         }
 
-        if (!queryData.results?.length) {
+        if (!page) {
             return res.status(404).json({ error: 'Post not found.' });
         }
 
-        const page  = queryData.results[0];
         const props = page.properties ?? {};
         const titleKey = getTitleKey(props);
 

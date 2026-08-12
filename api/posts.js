@@ -91,7 +91,8 @@ export default async function handler(req, res) {
             const titleKey = getTitleKey(props);
 
             const title   = getProp(props, titleKey, '(Untitled)');
-            const slug    = getProp(props, 'Slug', null) ?? page.id;
+            const rawSlug = getProp(props, 'Slug', null);
+            const slug    = (rawSlug && rawSlug.trim().length > 0) ? rawSlug.trim() : page.id;
             const date    = getProp(props, 'Date', null);
             const tags    = getProp(props, 'Tags', []);
             const excerpt = getProp(props, 'Excerpt', '');
