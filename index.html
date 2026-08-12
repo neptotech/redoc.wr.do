@@ -217,7 +217,8 @@
         <section id="blog" class="section">
             <div class="content">
                 <h2 class="type-on-view"><span class="italic">Thoughts</span> &amp; Ramblings</h2>
-                <p class="type-on-view" style="margin-bottom:2rem;opacity:0.8">Dev logs, musings, and everything in between.</p>
+                <p class="type-on-view" style="margin-bottom:2rem;opacity:0.8">Interesting things I’ve found worth
+                    sharing.</p>
 
                 <!-- Latest 3 posts teaser -->
                 <div class="blog-teaser-grid" id="blog-teaser-grid">
@@ -299,7 +300,7 @@
             }
 
             try {
-                const res  = await fetch('/api/posts');
+                const res = await fetch('/api/posts');
                 if (!res.ok) { teaserGrid.innerHTML = ''; return; }
                 const data = await res.json();
                 const posts = (data.posts ?? []).slice(0, 3);
