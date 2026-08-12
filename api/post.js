@@ -152,11 +152,13 @@ function blocksToHtml(blocks = []) {
                 html.push('<hr>');
                 break;
 
-            case 'toggle':
+            case 'toggle': {
+                const childHtml = block.children?.length ? blocksToHtml(block.children) : '';
                 html.push(
-                    `<details class="post-toggle"><summary>${richTextToHtml(rt)}</summary><div class="toggle-body"></div></details>`
+                    `<details class="post-toggle"><summary>${richTextToHtml(rt)}</summary><div class="toggle-body">${childHtml}</div></details>`
                 );
                 break;
+            }
 
             default:
                 // Silently skip unsupported block types (e.g. table, column, etc.)
@@ -245,32 +247,37 @@ export default async function handler(req, res) {
         const tags    = getProp(props, 'Tags', []);
         const excerpt = getProp(props, 'Excerpt', '');
 
-        // 2. Fetch all blocks (paginate if needed)
-        const allBlocks = [];
-        let cursor = undefined;
+        // Helper to fetch block children recursively
+        async function fetchBlocksRecursive(parentId) {
+            const blocks = [];
+            let cursor = undefined;
+            do {
+                const blockUrl = new URL(`https://api.notion.com/v1/blocks/${parentId}/children`);
+                blockUrl.searchParams.set('page_size', '100');
+                if (cursor) blockUrl.searchParams.set('start_cursor', cursor);
 
-        do {
-            const blockUrl = new URL(
-                `https://api.notion.com/v1/blocks/${page.id}/children`
-            );
-            blockUrl.searchParams.set('page_size', '100');
-            if (cursor) blockUrl.searchParams.set('start_cursor', cursor);
+                const res = await fetch(blockUrl.toString(), {
+                    headers: {
+                        Authorization: `Bearer ${NOTION_TOKEN}`,
+                        'Notion-Version': NOTION_VERSION,
+                    },
+                });
+                const data = await res.json();
+                if (!res.ok) break;
 
-            const blockRes = await fetch(blockUrl.toString(), {
-                headers: {
-                    Authorization: `Bearer ${NOTION_TOKEN}`,
-                    'Notion-Version': NOTION_VERSION,
-                },
-            });
+                for (const b of (data.results ?? [])) {
+                    if (b.has_children) {
+                        b.children = await fetchBlocksRecursive(b.id);
+                    }
+                    blocks.push(b);
+                }
+                cursor = data.has_more ? data.next_cursor : undefined;
+            } while (cursor);
+            return blocks;
+        }
 
-            const blockData = await blockRes.json();
-            if (!blockRes.ok) {
-                return res.status(502).json({ error: blockData.message ?? 'Block fetch error' });
-            }
-
-            allBlocks.push(...(blockData.results ?? []));
-            cursor = blockData.has_more ? blockData.next_cursor : undefined;
-        } while (cursor);
+        // 2. Fetch all blocks recursively
+        const allBlocks = await fetchBlocksRecursive(page.id);
 
         // 3. Convert blocks to HTML
         const content_html = blocksToHtml(allBlocks);
