@@ -2,13 +2,23 @@
 <html lang="en" data-theme-mode="auto">
 
 <head>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-NX681S81Z2"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-NX681S81Z2');
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Title & meta description are set dynamically from Notion data -->
     <title>Post — redoc</title>
     <meta name="description" content="A post on redoc's blog.">
     <link rel="stylesheet" href="../style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/tokyo-night-dark.min.css">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/tokyo-night-dark.min.css">
     <link
         href="https://fonts.googleapis.com/css2?family=Inria+Serif:ital,wght@0,300;0,400;0,700;1,300;1,400;1,700&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap"
         rel="stylesheet">
@@ -113,7 +123,7 @@
         /* ── Copy Code helper function ── */
         function copyCodeBlock(button) {
             const wrapper = button.closest('.code-block-wrapper');
-            const codeEl  = wrapper ? wrapper.querySelector('code') : null;
+            const codeEl = wrapper ? wrapper.querySelector('code') : null;
             if (!codeEl) return;
 
             const text = codeEl.innerText || codeEl.textContent;
@@ -152,19 +162,19 @@
 
         /* ── Fetch & render single post ── */
         (async () => {
-            const params  = new URLSearchParams(location.search);
-            const slug    = params.get('slug')?.trim();
+            const params = new URLSearchParams(location.search);
+            const slug = params.get('slug')?.trim();
 
             const skeleton = document.getElementById('post-skeleton');
-            const article  = document.getElementById('post-article');
-            const errDiv   = document.getElementById('post-error');
-            const errMsg   = document.getElementById('post-error-msg');
+            const article = document.getElementById('post-article');
+            const errDiv = document.getElementById('post-error');
+            const errMsg = document.getElementById('post-error-msg');
 
             function showError(msg) {
                 skeleton.style.display = 'none';
-                article.style.display  = 'none';
-                errDiv.style.display   = 'block';
-                errMsg.textContent     = msg;
+                article.style.display = 'none';
+                errDiv.style.display = 'block';
+                errMsg.textContent = msg;
             }
 
             if (!slug) {
@@ -179,7 +189,7 @@
             }
 
             try {
-                const res  = await fetch(`/api/post?slug=${encodeURIComponent(slug)}`);
+                const res = await fetch(`/api/post?slug=${encodeURIComponent(slug)}`);
                 const data = await res.json();
 
                 if (!res.ok) throw new Error(data.error ?? 'Failed to load post');
@@ -216,11 +226,11 @@
 
                 // Swap skeleton → article with a fade
                 skeleton.style.transition = 'opacity 0.3s ease';
-                skeleton.style.opacity    = '0';
+                skeleton.style.opacity = '0';
                 setTimeout(() => {
                     skeleton.style.display = 'none';
-                    article.style.display  = 'block';
-                    article.style.opacity  = '0';
+                    article.style.display = 'block';
+                    article.style.opacity = '0';
                     article.style.transition = 'opacity 0.4s ease';
                     requestAnimationFrame(() => {
                         requestAnimationFrame(() => { article.style.opacity = '1'; });
