@@ -63,6 +63,12 @@ function escHtml(str) {
  * Handles: paragraph, heading_1-3, bulleted_list_item, numbered_list_item,
  *          code, quote, callout, image, divider, toggle, to_do
  */
+/**
+ * Convert an array of Notion blocks into clean HTML.
+ * Handles: paragraph, heading_1-3, bulleted_list_item, numbered_list_item,
+ *          code, quote, callout, image, divider, toggle, to_do
+ * Recursively renders block.children for any block type.
+ */
 function blocksToHtml(blocks = []) {
     const html = [];
     let inBullet   = false;
@@ -76,61 +82,93 @@ function blocksToHtml(blocks = []) {
         const data = block[type] ?? {};
         const rt   = data.rich_text ?? [];
 
-        // Close open lists when we hit a non-list block
+        // Close open lists when hitting a non-list block
         if (type !== 'bulleted_list_item')   closeBullet();
         if (type !== 'numbered_list_item')   closeNumbered();
 
+        const childrenHtml = block.children?.length ? blocksToHtml(block.children) : '';
+
         switch (type) {
-            case 'paragraph':
-                html.push(`<p>${richTextToHtml(rt)}</p>`);
+            case 'paragraph': {
+                const text = richTextToHtml(rt);
+                if (text || childrenHtml) {
+                    html.push(`<p>${text}</p>${childrenHtml}`);
+                }
                 break;
+            }
 
             case 'heading_1':
-                html.push(`<h2>${richTextToHtml(rt)}</h2>`);
+                html.push(`<h2>${richTextToHtml(rt)}</h2>${childrenHtml}`);
                 break;
             case 'heading_2':
-                html.push(`<h3>${richTextToHtml(rt)}</h3>`);
+                html.push(`<h3>${richTextToHtml(rt)}</h3>${childrenHtml}`);
                 break;
             case 'heading_3':
-                html.push(`<h4>${richTextToHtml(rt)}</h4>`);
+                html.push(`<h4>${richTextToHtml(rt)}</h4>${childrenHtml}`);
                 break;
 
-            case 'bulleted_list_item':
+            case 'bulleted_list_item': {
                 if (!inBullet) { html.push('<ul>'); inBullet = true; }
-                html.push(`<li>${richTextToHtml(rt)}</li>`);
+                const childWrapper = childrenHtml ? `<div class="list-children">${childrenHtml}</div>` : '';
+                html.push(`<li>${richTextToHtml(rt)}${childWrapper}</li>`);
                 break;
+            }
 
-            case 'numbered_list_item':
+            case 'numbered_list_item': {
                 if (!inNumbered) { html.push('<ol>'); inNumbered = true; }
-                html.push(`<li>${richTextToHtml(rt)}</li>`);
+                const childWrapper = childrenHtml ? `<div class="list-children">${childrenHtml}</div>` : '';
+                html.push(`<li>${richTextToHtml(rt)}${childWrapper}</li>`);
                 break;
+            }
 
             case 'to_do': {
                 const checked = data.checked ? ' checked' : '';
                 html.push(
-                    `<label class="post-todo"><input type="checkbox"${checked} disabled> ${richTextToHtml(rt)}</label>`
+                    `<label class="post-todo"><input type="checkbox"${checked} disabled> <span>${richTextToHtml(rt)}</span></label>${childrenHtml}`
                 );
                 break;
             }
 
             case 'quote':
-                html.push(`<blockquote>${richTextToHtml(rt)}</blockquote>`);
+                html.push(`<blockquote>${richTextToHtml(rt)}${childrenHtml}</blockquote>`);
                 break;
 
             case 'callout': {
                 const icon = data.icon?.emoji ?? '💡';
                 html.push(
-                    `<div class="post-callout"><span class="callout-icon">${icon}</span><div>${richTextToHtml(rt)}</div></div>`
+                    `<div class="post-callout"><span class="callout-icon">${icon}</span><div class="callout-content">${richTextToHtml(rt)}${childrenHtml}</div></div>`
                 );
                 break;
             }
 
             case 'code': {
-                const lang  = data.language ?? '';
+                const rawLang = (data.language ?? 'text').toLowerCase();
+                // Map notion language names to Prism/Highlight.js standard names
+                const langMap = {
+                    'c++': 'cpp',
+                    'c#': 'csharp',
+                    'visual basic': 'vbnet',
+                    'html/css': 'html',
+                    'plain text': 'plaintext'
+                };
+                const lang = langMap[rawLang] || rawLang;
                 const codeText = rt.map((r) => r.plain_text).join('');
-                html.push(
-                    `<pre><code class="language-${escHtml(lang)}">${escHtml(codeText)}</code></pre>`
-                );
+                const displayLang = data.language ? data.language : 'Code';
+
+                html.push(`
+<div class="code-block-wrapper">
+    <div class="code-block-header">
+        <span class="code-lang-label">${escHtml(displayLang)}</span>
+        <button class="copy-code-btn" type="button" aria-label="Copy code" onclick="copyCodeBlock(this)">
+            <svg class="copy-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+            <span class="copy-text">Copy</span>
+        </button>
+    </div>
+    <pre><code class="language-${escHtml(lang)}">${escHtml(codeText)}</code></pre>
+</div>`);
                 break;
             }
 
@@ -153,20 +191,19 @@ function blocksToHtml(blocks = []) {
                 break;
 
             case 'toggle': {
-                const childHtml = block.children?.length ? blocksToHtml(block.children) : '';
                 html.push(
-                    `<details class="post-toggle"><summary>${richTextToHtml(rt)}</summary><div class="toggle-body">${childHtml}</div></details>`
+                    `<details class="post-toggle"><summary><span class="toggle-arrow">▶</span> <span class="toggle-title">${richTextToHtml(rt)}</span></summary><div class="toggle-body">${childrenHtml}</div></details>`
                 );
                 break;
             }
 
             default:
-                // Silently skip unsupported block types (e.g. table, column, etc.)
+                if (childrenHtml) html.push(childrenHtml);
                 break;
         }
     }
 
-    // Close any still-open lists
+    // Close open lists
     closeBullet();
     closeNumbered();
 

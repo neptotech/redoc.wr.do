@@ -62,6 +62,19 @@
                 <div class="post-header-meta" id="post-meta"></div>
             </div>
 
+            <!-- Code theme selector -->
+            <div class="code-theme-picker" id="code-theme-picker" style="display:none">
+                <label for="syntax-theme">Syntax Theme:</label>
+                <select id="syntax-theme" onchange="changeSyntaxTheme(this.value)">
+                    <option value="tokyo-night-dark" selected>Tokyo Night Dark</option>
+                    <option value="github-dark">GitHub Dark</option>
+                    <option value="dracula">Dracula</option>
+                    <option value="atom-one-dark">Atom One Dark</option>
+                    <option value="vs2015">VS Code Dark</option>
+                    <option value="monokai-sublime">Monokai Sublime</option>
+                </select>
+            </div>
+
             <div class="post-body" id="post-body"></div>
 
             <!-- Ad slot bottom -->
@@ -97,6 +110,46 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
     <script src="../script.js"></script>
     <script>
+        /* ── Copy Code helper function ── */
+        function copyCodeBlock(button) {
+            const wrapper = button.closest('.code-block-wrapper');
+            const codeEl  = wrapper ? wrapper.querySelector('code') : null;
+            if (!codeEl) return;
+
+            const text = codeEl.innerText || codeEl.textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const textSpan = button.querySelector('.copy-text');
+                const origText = textSpan ? textSpan.textContent : 'Copy';
+                button.classList.add('copied');
+                if (textSpan) textSpan.textContent = 'Copied!';
+                setTimeout(() => {
+                    button.classList.remove('copied');
+                    if (textSpan) textSpan.textContent = origText;
+                }, 2000);
+            }).catch(err => console.error('Failed to copy code:', err));
+        }
+
+        /* ── Change Syntax Highlight Theme ── */
+        function changeSyntaxTheme(themeName) {
+            let themeLink = document.getElementById('hljs-theme-link');
+            if (!themeLink) {
+                themeLink = document.createElement('link');
+                themeLink.id = 'hljs-theme-link';
+                themeLink.rel = 'stylesheet';
+                document.head.appendChild(themeLink);
+            }
+            themeLink.href = `https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/${themeName}.min.css`;
+            localStorage.setItem('redoc_syntax_theme', themeName);
+        }
+
+        // Restore saved syntax theme choice if set
+        const savedTheme = localStorage.getItem('redoc_syntax_theme');
+        if (savedTheme) {
+            const selectEl = document.getElementById('syntax-theme');
+            if (selectEl) selectEl.value = savedTheme;
+            changeSyntaxTheme(savedTheme);
+        }
+
         /* ── Fetch & render single post ── */
         (async () => {
             const params  = new URLSearchParams(location.search);
@@ -147,8 +200,14 @@
                     ${data.date ? `<span class="blog-date">${formatDate(data.date)}</span>` : ''}
                     <div class="blog-tags">${tagsHtml}</div>`;
 
-                // Inject post body HTML (server-side sanitised Notion blocks)
-                document.getElementById('post-body').innerHTML = data.content_html || '<p><em>This post has no content yet.</em></p>';
+                // Inject post body HTML
+                const bodyEl = document.getElementById('post-body');
+                bodyEl.innerHTML = data.content_html || '<p><em>This post has no content yet.</em></p>';
+
+                // Show theme picker if code blocks exist
+                if (bodyEl.querySelector('.code-block-wrapper')) {
+                    document.getElementById('code-theme-picker').style.display = 'flex';
+                }
 
                 // Trigger code syntax highlighting
                 if (window.hljs) {
