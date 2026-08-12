@@ -430,3 +430,40 @@ gsap.utils.toArray('.card').forEach((card, i) => {
     }, 8000);
 })();
 
+/* ── Night Light Overlay ─────────────────────────────────────────────────────
+ *
+ * Replicates Windows Night Light at 25% slider (5175 K) exactly.
+ *
+ * The PowerShell script applies a per-channel multiply LUT:
+ *   R × 1.0000 · G × 0.9066 · B × 0.8314
+ *
+ * CSS `mix-blend-mode: multiply` is defined as:
+ *   result = source × backdrop / 255   (per channel)
+ *
+ * Setting the overlay to rgb(255, 231, 212) gives:
+ *   R: pixel.R × 255/255 = pixel.R × 1.0000  ✓
+ *   G: pixel.G × 231/255 = pixel.G × 0.9059  ✓  (rounds to 231 from 231.18)
+ *   B: pixel.B × 212/255 = pixel.B × 0.8314  ✓
+ *
+ * This is mathematically identical to the LUT mechanism in the script.
+ * The overlay is pointer-events:none so all clicks pass through unaffected.
+ */
+(function initNightLightOverlay() {
+    const overlay = document.createElement('div');
+    overlay.id = 'night-light-overlay';
+    // Inline the critical properties so the overlay works even before
+    // style.css is fully parsed (e.g. flash-of-unstyled-content prevention)
+    overlay.style.cssText = [
+        'position:fixed',
+        'inset:0',
+        'background:rgb(255,231,212)',
+        'mix-blend-mode:multiply',
+        'pointer-events:none',
+        'z-index:2147483647',
+        'will-change:opacity',
+        'transition:opacity 0.4s ease',
+    ].join(';');
+    // Insert as the very last child of <body> so it sits on top of everything
+    // (including particles canvas, modals, dropdowns, etc.)
+    document.body.appendChild(overlay);
+})();

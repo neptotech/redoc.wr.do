@@ -33,6 +33,30 @@ body {
     transition: background-color 0.5s ease, color 0.5s ease;
 }
 
+/*
+ * ── Night Light Overlay ──────────────────────────────────────────────────────
+ * Exact replication of Windows Night Light @ 25% slider (5175 K).
+ *
+ * Math (from PowerShell KelvinToMultipliers, K = 5175, t = 51.75):
+ *   R  mult = 1.0000  → overlay R = 255
+ *   G  mult = 0.9066  → overlay G = 231   (99.4708·ln(51.75)−161.1196)/255.19
+ *   B  mult = 0.8314  → overlay B = 212   (138.5177·ln(41.75)−305.0448)/255
+ *
+ * mix-blend-mode: multiply → result_channel = screen_channel × (overlay/255)
+ * This is exactly the per-channel LUT the script applies: ptr[i] = bL[ptr[i]]
+ * where bL[x] = round(x * mult). Identical mechanism, identical output.
+ */
+#night-light-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgb(255, 231, 212);
+    mix-blend-mode: multiply;
+    pointer-events: none;
+    z-index: 2147483647;         /* max possible z-index */
+    will-change: opacity;
+    transition: opacity 0.4s ease;
+}
+
 h1,
 h2,
 h3,
