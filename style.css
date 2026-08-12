@@ -1,6 +1,7 @@
 :root {
     --text-color: #1C1B20;
     --bg-color: #FAA67C;
+    --nav-bg: rgba(250, 166, 124, 0.88);
     --accent-color: #E94E64;
     --card-bg: rgba(255, 255, 255, 0.2);
     --border-color: rgba(28, 27, 32, 0.1);
@@ -10,6 +11,7 @@ body.dark-theme {
     --text-color: #fdf5f2;
     /* Light whitish shade */
     --bg-color: #1C1B20;
+    --nav-bg: rgba(28, 27, 32, 0.88);
     --accent-color: #E94E64;
     --card-bg: rgba(255, 255, 255, 0.05);
     --border-color: rgba(253, 245, 242, 0.1);
@@ -119,9 +121,9 @@ nav {
     position: fixed;
     top: 0;
     width: 100%;
-    background: rgba(250, 166, 124, 0.9);
+    background: var(--nav-bg);
     -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(4px);
+    backdrop-filter: blur(8px);
     z-index: 1000;
     padding: 1rem 2rem;
     transform: translateY(-100%);
@@ -179,7 +181,8 @@ nav.visible {
     transition: color 0.3s;
 }
 
-.nav-links a:hover {
+.nav-links a:hover,
+.nav-links a.active-nav-link {
     color: var(--accent-color);
 }
 
