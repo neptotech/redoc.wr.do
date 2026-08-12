@@ -219,7 +219,10 @@ export default async function handler(req, res) {
 
     if (req.method === 'OPTIONS') return res.status(200).end();
 
-    if (!NOTION_TOKEN || !NOTION_DB_ID) {
+    const token = process.env.NOTION_TOKEN;
+    const dbId  = process.env.NOTION_DB_ID;
+
+    if (!token || !dbId) {
         return res.status(500).json({ error: 'Notion credentials not configured.' });
     }
 
@@ -231,11 +234,11 @@ export default async function handler(req, res) {
     try {
         // 1. Query the DB to find the matching page by Slug property or ID
         let queryRes = await fetch(
-            `https://api.notion.com/v1/databases/${NOTION_DB_ID.trim()}/query`,
+            `https://api.notion.com/v1/databases/${dbId.trim()}/query`,
             {
                 method: 'POST',
                 headers: {
-                    Authorization: `Bearer ${NOTION_TOKEN}`,
+                    Authorization: `Bearer ${token}`,
                     'Notion-Version': NOTION_VERSION,
                     'Content-Type': 'application/json',
                 },
@@ -259,7 +262,7 @@ export default async function handler(req, res) {
         if (!page) {
             const pageRes = await fetch(`https://api.notion.com/v1/pages/${slug}`, {
                 headers: {
-                    Authorization: `Bearer ${NOTION_TOKEN}`,
+                    Authorization: `Bearer ${token}`,
                     'Notion-Version': NOTION_VERSION,
                 },
             });
@@ -295,7 +298,7 @@ export default async function handler(req, res) {
 
                 const res = await fetch(blockUrl.toString(), {
                     headers: {
-                        Authorization: `Bearer ${NOTION_TOKEN}`,
+                        Authorization: `Bearer ${token}`,
                         'Notion-Version': NOTION_VERSION,
                     },
                 });
