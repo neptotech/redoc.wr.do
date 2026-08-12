@@ -1,3 +1,44 @@
+/* ── Night Light Overlay ─────────────────────────────────────────────────────
+ * Injected FIRST so it runs even if later code throws.
+ *
+ * Approach: SVG feColorMatrix filter on <html>.
+ *   - mix-blend-mode:multiply was invisible on dark backgrounds (multiplying
+ *     near-black pixels by the warm color barely changes them).
+ *   - feColorMatrix applies the EXACT per-channel multiply from the script:
+ *       R × 1.0000,  G × 0.9066,  B × 0.8314
+ *   - Works identically on light AND dark backgrounds, just like Windows
+ *     Night Light operates at the GPU gamma level.
+ *
+ * position:fixed elements are NOT broken because the filter is on <html>
+ * itself (the viewport root), so fixed children remain viewport-relative.
+ */
+(function initNightLightOverlay() {
+    // Inject the SVG filter definition (hidden, just defs)
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.id = 'night-light-svg';
+    svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+    svg.style.cssText = 'position:absolute;width:0;height:0;overflow:hidden;pointer-events:none';
+    svg.innerHTML = `
+        <defs>
+          <filter id="night-light-filter" x="0%" y="0%" width="100%" height="100%"
+                  color-interpolation-filters="sRGB">
+            <!-- Per-channel multiply: R×1.0000  G×0.9066  B×0.8314            -->
+            <!-- Derived from KelvinToMultipliers(5175) — Night Light @ 25%    -->
+            <feColorMatrix type="matrix" values="
+              1.0000  0       0       0  0
+              0       0.9066  0       0  0
+              0       0       0.8314  0  0
+              0       0       0       1  0"/>
+          </filter>
+        </defs>`;
+    // Append to body (or document.documentElement if body not ready)
+    const target = document.body || document.documentElement;
+    target.appendChild(svg);
+
+    // Apply the filter to <html> so it covers every pixel on every page
+    document.documentElement.style.filter = 'url(#night-light-filter)';
+})();
+
 // Custom Cursor
 const cursor = document.querySelector('.custom-cursor');
 document.addEventListener('mousemove', (e) => {
@@ -430,40 +471,4 @@ gsap.utils.toArray('.card').forEach((card, i) => {
     }, 8000);
 })();
 
-/* ── Night Light Overlay ─────────────────────────────────────────────────────
- *
- * Replicates Windows Night Light at 25% slider (5175 K) exactly.
- *
- * The PowerShell script applies a per-channel multiply LUT:
- *   R × 1.0000 · G × 0.9066 · B × 0.8314
- *
- * CSS `mix-blend-mode: multiply` is defined as:
- *   result = source × backdrop / 255   (per channel)
- *
- * Setting the overlay to rgb(255, 231, 212) gives:
- *   R: pixel.R × 255/255 = pixel.R × 1.0000  ✓
- *   G: pixel.G × 231/255 = pixel.G × 0.9059  ✓  (rounds to 231 from 231.18)
- *   B: pixel.B × 212/255 = pixel.B × 0.8314  ✓
- *
- * This is mathematically identical to the LUT mechanism in the script.
- * The overlay is pointer-events:none so all clicks pass through unaffected.
- */
-(function initNightLightOverlay() {
-    const overlay = document.createElement('div');
-    overlay.id = 'night-light-overlay';
-    // Inline the critical properties so the overlay works even before
-    // style.css is fully parsed (e.g. flash-of-unstyled-content prevention)
-    overlay.style.cssText = [
-        'position:fixed',
-        'inset:0',
-        'background:rgb(255,231,212)',
-        'mix-blend-mode:multiply',
-        'pointer-events:none',
-        'z-index:2147483647',
-        'will-change:opacity',
-        'transition:opacity 0.4s ease',
-    ].join(';');
-    // Insert as the very last child of <body> so it sits on top of everything
-    // (including particles canvas, modals, dropdowns, etc.)
-    document.body.appendChild(overlay);
-})();
+/* Night Light overlay is now handled at the top of this file via SVG feColorMatrix. */
