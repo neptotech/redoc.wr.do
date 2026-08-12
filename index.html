@@ -29,6 +29,7 @@
                 <li><a href="#about">About</a></li>
                 <li><a href="#projects">Projects</a></li>
                 <li><a href="#interests">Interests</a></li>
+                <li><a href="/blog">Blog</a></li>
             </ul>
         </div>
     </nav>
@@ -213,10 +214,32 @@
             </div>
         </section>
 
-        <section id="blog" class="section placeholder-section">
+        <section id="blog" class="section">
             <div class="content">
-                <h2 class="type-on-view"><span class="italic">Thoughts</span> & Ramblings</h2>
-                <p><em>(Blog coming soon... taking space for now)</em></p>
+                <h2 class="type-on-view"><span class="italic">Thoughts</span> &amp; Ramblings</h2>
+                <p class="type-on-view" style="margin-bottom:2rem;opacity:0.8">Dev logs, musings, and everything in between.</p>
+
+                <!-- Latest 3 posts teaser -->
+                <div class="blog-teaser-grid" id="blog-teaser-grid">
+                    <!-- Skeletons while loading -->
+                    <div class="skeleton-card" id="bsk1">
+                        <div class="skeleton-line short skeleton"></div>
+                        <div class="skeleton-line tall wide skeleton"></div>
+                        <div class="skeleton-line full skeleton"></div>
+                    </div>
+                    <div class="skeleton-card" id="bsk2">
+                        <div class="skeleton-line short skeleton"></div>
+                        <div class="skeleton-line tall wide skeleton"></div>
+                        <div class="skeleton-line full skeleton"></div>
+                    </div>
+                    <div class="skeleton-card" id="bsk3">
+                        <div class="skeleton-line short skeleton"></div>
+                        <div class="skeleton-line tall wide skeleton"></div>
+                        <div class="skeleton-line full skeleton"></div>
+                    </div>
+                </div>
+
+                <a href="/blog" class="blog-all-link" id="blog-all-link">All posts &rarr;</a>
             </div>
         </section>
 
@@ -246,6 +269,48 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
     <script src="script.js"></script>
+    <script>
+        /* ── Blog teaser: fetch 3 latest posts for the home page section ── */
+        (async () => {
+            const teaserGrid = document.getElementById('blog-teaser-grid');
+            if (!teaserGrid) return;
+
+            function formatDate(iso) {
+                if (!iso) return '';
+                const d = new Date(iso);
+                return d.toLocaleDateString('en-IN', { year: 'numeric', month: 'short', day: 'numeric' });
+            }
+
+            function renderMiniCard(post) {
+                const tagsHtml = (post.tags || []).slice(0, 2)
+                    .map(t => `<span class="blog-tag">${t}</span>`)
+                    .join('');
+                const dateHtml = post.date ? `<span class="blog-date">${formatDate(post.date)}</span>` : '';
+                return `
+                <a class="blog-card" href="/blog/post.html?slug=${encodeURIComponent(post.slug)}">
+                    <div class="blog-card-meta">
+                        ${dateHtml}
+                        <div class="blog-tags">${tagsHtml}</div>
+                    </div>
+                    <h2>${post.title}</h2>
+                    <p>${post.excerpt || ''}</p>
+                    <div class="blog-card-footer">Read &rarr;</div>
+                </a>`;
+            }
+
+            try {
+                const res  = await fetch('/api/posts');
+                if (!res.ok) { teaserGrid.innerHTML = ''; return; }
+                const data = await res.json();
+                const posts = (data.posts ?? []).slice(0, 3);
+                if (!posts.length) { teaserGrid.innerHTML = '<p style="opacity:0.6;font-style:italic">No posts yet — check back soon ✨</p>'; return; }
+                teaserGrid.innerHTML = posts.map(renderMiniCard).join('');
+            } catch (_) {
+                // Silently clear skeletons on network error — not critical for homepage
+                teaserGrid.innerHTML = '';
+            }
+        })();
+    </script>
 </body>
 
 </html>
