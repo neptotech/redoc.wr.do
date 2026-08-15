@@ -1,19 +1,15 @@
-# Vishnu (redoc) Personal Website
+# [Vishnu (redoc) Personal Website](https://redoc.wr.do)
+Glad that  you are reading this. The website is live at [redoc.wr.do](https://redoc.wr.do).  
+The website is designed responsive,aesthetically nice. It has working blog feature via notion integration.
+It is hosted via netlify.
+ 
+ Please do look into my other projects(pinned ones atleast) at my _github profile_,and my _stackoverflow profile_(the portfolio website links those).  
 
-A multi-functional, modern portfolio and personal website for Vishnu aka neptotech (redoc).
+ _I have been coding for a lot of years making many personal projects, superuser scripts, unreleased. I am interested a lot in utility software/website/android app development recently._
+
+A multi-functional, modern portfolio and personal website.
 
 ## Tech Stack
 - HTML5
 - CSS3 (Vanilla + Google Fonts)
 - JavaScript (Vanilla + Particle.js + Typed.js + GSAP/ScrollTrigger)
-
-## Features
-- **Theming**: Dark/Light mode depending on context. Accent set to `#E94E64`.
-- **Interactions**: Smooth custom cursor and background particles that interact with the mouse.
-- **Scroll Effects**: Profile picture transition into the navigation bar, and scroll-fade in on cards and text blocks.
-- **Dynamic Typing**: Typed.js welcoming header.
-
-## How to run
-1. Open the workspace in VS Code.
-2. Run the `Serve Website` task (`Ctrl+Shift+B` or from Terminal > Run Task...)
-3. Navigate to http://localhost:3000
