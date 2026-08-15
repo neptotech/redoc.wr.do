@@ -1,7 +1,7 @@
 # [Vishnu (redoc) Personal Website](https://redoc.wr.do)
 Glad that  you are reading this. The website is live at [redoc.wr.do](https://redoc.wr.do).  
 The website is designed responsive,aesthetically nice. It has working blog feature via notion integration.
-It is hosted via netlify.
+It is hosted via netlify with blogs support(node js backend at netlify cloud server)(vercel is also hosting same with different domain).
  
  Please do look into my other projects(pinned ones atleast) at my _github profile_,and my _stackoverflow profile_(the portfolio website links those).  
 
